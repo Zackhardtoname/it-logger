@@ -1,16 +1,37 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
+import { connect } from "../../../node_modules/react-redux"
+import PropTypes from 'prop-types'
 import M from "materialize-css/dist/js/materialize.min.js"
+import { updateLog } from "../../actions/logActions";
 
-const EditLogModal = () => {
+const EditLogModal = ({ current, updateLog }) => {
     const [message, setMessage] = useState("")
     const [tech, setTech] = useState("")
     const [attention, setAttention] = useState(false)
+
+    useEffect(() => {
+        if (current) {
+            setMessage(current.message)
+            setTech(current.tech)
+            setAttention(current.attention)
+        }
+    }, [current])
 
     const onSubmit = () => {
         if (message === "" || tech === "") {
             M.toast({html: "Please enter a message and tech"})
         } else {
-            console.log(message, tech, tech)
+            const updLog = {
+                id: current.id,
+                message: message,
+                attention: attention,
+                tech: tech,
+                date: new Date()
+            }
+
+            updateLog(updLog)
+            M.toast({html: `Log updated by ${tech}`})
+
             setMessage("")
             setTech("")
             setAttention(false)
@@ -26,7 +47,6 @@ const EditLogModal = () => {
                         <input type="text" name="message" value={message}
                                onChange={e => setMessage(e.target.value)}/>
                         <label htmlFor="message" className="active">
-                            Log Message
                         </label>
                     </div>
                 </div>
@@ -66,5 +86,15 @@ const modalStyle = {
     height: "75%",
 }
 
-export default EditLogModal;
+EditLogModal.prototype = {
+    // todo why isn't current required
+    current: PropTypes.object,
+    updateLog: PropTypes.func.isRequired,
+}
+
+const mapStateToProps = state => ({
+    current: state.logReducer.current
+})
+
+export default connect(mapStateToProps, {updateLog})(EditLogModal);;
 
